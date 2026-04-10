@@ -5,727 +5,496 @@
 <title>Эволюция богатыря</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:#08080f;font-family:monospace;color:#f0f0f0;padding:6px;max-width:700px;margin:0 auto}
-h1{color:#f8d840;font-size:13px;text-align:center;padding:7px;border-bottom:2px solid #f8d840;letter-spacing:1px}
+body{background:#08080f;font-family:monospace;color:#f0f0f0;padding:8px;max-width:680px;margin:0 auto}
+h1{color:#f8d840;font-size:13px;text-align:center;padding:8px;border-bottom:2px solid #f8d840;letter-spacing:1px}
 #status{color:#f8a030;font-size:12px;text-align:center;padding:5px;font-weight:bold}
-#genbar{display:flex;gap:2px;padding:4px 0;flex-wrap:wrap;justify-content:center}
-.gb{width:16px;height:8px;background:#1a1a30;border-radius:1px;flex-shrink:0}
-.gb.done{background:#f8d840}
-.gb.cur{background:#f8a030}
-#tip{font-size:11px;color:#aaa;text-align:center;padding:5px 8px;background:#111;border-radius:3px;margin:5px 0;line-height:1.5}
+#genbar{display:flex;gap:2px;padding:4px 2px;flex-wrap:wrap;justify-content:center}
+.gb{width:14px;height:8px;background:#1a1a30;border-radius:1px;flex-shrink:0}
+.gb.done{background:#f8d840}.gb.cur{background:#f8a030}
+#tip{font-size:11px;color:#aaa;text-align:center;padding:5px;background:#111;border-radius:3px;margin:5px 0;line-height:1.5}
 #grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
-.card{border:3px solid #2a2a44;border-radius:5px;overflow:hidden;cursor:pointer;background:#0a0a18;transition:border-color .1s}
-.card:active{border-color:#f8d840}
-.card canvas{width:100%;height:auto;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
-.clabel{font-size:10px;color:#f8d840;text-align:center;padding:5px;background:#06060f;font-weight:bold}
-#diffbar{font-size:9px;color:#556;text-align:center;margin-bottom:4px}
+.card{border:3px solid #2a2a44;border-radius:5px;overflow:hidden;cursor:pointer;background:#0a0a18}
+.card:active{border-color:#f8d840;transform:scale(.97)}
+.card svg{width:100%;height:auto;display:block}
+.clabel{font-size:11px;color:#f8d840;text-align:center;padding:5px;background:#06060f;font-weight:bold}
 #histbox{margin-top:8px;border-top:1px solid #222;padding-top:6px}
 #histbox h3{color:#f8d840;font-size:10px;margin-bottom:4px}
-#hrow{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+#hrow{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px}
 .hi{flex-shrink:0;text-align:center}
-.hi canvas{width:60px;height:auto;display:block;image-rendering:pixelated;border:1px solid #333;border-radius:2px}
+.hi svg{width:64px;height:auto;display:block;border:1px solid #333;border-radius:2px}
 .hi p{font-size:8px;color:#556;margin-top:2px}
 #winbox{display:none;text-align:center;padding:12px;background:#0a0a18;border:2px solid #f8d840;border-radius:5px;margin-top:8px}
-#winbox h2{color:#f8d840;font-size:14px;margin-bottom:5px}
+#winbox h2{color:#f8d840;font-size:14px;margin-bottom:6px}
 #winbox p{color:#888;font-size:10px;margin-bottom:8px;line-height:1.5}
-#winbox canvas{width:100%;height:auto;display:block;image-rendering:pixelated;border:2px solid #f8d840;border-radius:4px;margin-bottom:8px}
+#winbox svg{width:100%;height:auto;display:block;border:2px solid #f8d840;border-radius:4px;margin-bottom:8px}
 .rbtn{background:#f8d840;color:#000;border:none;padding:8px 18px;font:bold 12px monospace;cursor:pointer;border-radius:3px;width:100%}
 </style></head><body>
 
 <h1>⚔ ЭВОЛЮЦИЯ БОГАТЫРЯ — 30 ПОКОЛЕНИЙ ⚔</h1>
 <div id="status">Поколение 1 из 30</div>
 <div id="genbar"></div>
-<div id="tip">👆 Нажми на понравившегося — он станет родителем следующего поколения<br>Каждый вариант отличается от родителя минимум на 70%</div>
-<div id="diffbar"></div>
+<div id="tip">👆 Нажми на понравившегося богатыря</div>
 <div id="grid"></div>
-<div id="histbox">
-  <h3>📜 История (прокрути →):</h3>
-  <div id="hrow"></div>
-</div>
+<div id="histbox"><h3>📜 История:</h3><div id="hrow"></div></div>
 <div id="winbox">
-  <h2>🏆 БОГАТЫРЬ ЭВОЛЮЦИОНИРОВАЛ!</h2>
-  <canvas id="winCanvas"></canvas>
-  <p>30 поколений отбора завершены.<br>Этот богатырь — результат твоего вкуса!</p>
-  <button class="rbtn" onclick="restart()">🔄 Начать заново</button>
+  <h2>🏆 ФИНАЛЬНЫЙ БОГАТЫРЬ!</h2>
+  <div id="winsvg"></div>
+  <p>30 поколений завершены. Это твой богатырь!</p>
+  <button class="rbtn" onclick="restart()">🔄 Заново</button>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// ПАРАМЕТРЫ
-// ═══════════════════════════════════════════════
-const CW = 440, CH = 260;
-const MAX_GEN = 30;
-const MIN_CHANGE = 0.70; // минимальное изменение каждого гена
-
-let GEN = 1;
-let PARENT = null; // текущая родительская ДНК
-let VARIANTS = []; // текущие 2 варианта
-
-// ДНК: 8 генов 0..1
-// 0=телосложение  1=тип брони   2=поза коня  3=цвет(холод→тепло)
-// 4=плотность фона  5=детализация  6=небо(рассвет→ночь)  7=масштаб
-
-// ═══════════════════════════════════════════════
-// ГЕНЕРАТОР СЛУЧАЙНЫХ ЧИСЕЛ (детерминированный)
-// ═══════════════════════════════════════════════
-class RNG {
-  constructor(seed) { this.s = seed >>> 0; }
-  next() {
-    this.s = (Math.imul(this.s, 1664525) + 1013904223) >>> 0;
-    return this.s / 4294967296;
-  }
-  range(lo, hi) { return lo + this.next() * (hi - lo); }
-  pick(arr) { return arr[Math.floor(this.next() * arr.length)]; }
+// ══════════════════════════════════════════
+// RNG — детерминированный
+// ══════════════════════════════════════════
+function RNG(seed){
+  this.s = (seed ^ 0xdeadbeef) >>> 0;
+  this.next = function(){
+    this.s = (Math.imul(this.s, 747796405) + 2891336453) >>> 0;
+    let z = this.s;
+    z = Math.imul(z ^ (z >>> 16), 0x45d9f3b) >>> 0;
+    z = Math.imul(z ^ (z >>> 16), 0x45d9f3b) >>> 0;
+    return (z ^ (z >>> 16)) / 4294967296;
+  };
+  this.f = function(lo,hi){ return lo + this.next()*(hi-lo); };
 }
 
-// Создаём начальную ДНК
-function makeSeedDNA(seed) {
-  const r = new RNG(seed);
-  return Array.from({length: 8}, () => r.next());
+// ДНК: 8 генов
+// 0=тело  1=броня  2=поза  3=цвет  4=фон  5=детали  6=небо  7=размер
+const MAX_GEN=30, N_VAR=2, MIN_DIFF=0.70;
+let GEN=1, PARENT=null;
+
+function mkDNA(seed){
+  const r=new RNG(seed);
+  return Array.from({length:8},()=>r.next());
 }
 
-// ═══════════════════════════════════════════════
-// МУТАЦИЯ: каждый ген меняется минимум на 70%
-// ═══════════════════════════════════════════════
-function mutate(parentDNA, seed) {
-  const r = new RNG(seed);
-  const child = new Array(8);
-
-  for (let i = 0; i < 8; i++) {
-    const p = parentDNA[i];
-
-    // Зоны куда НЕ можем попасть: [p - MIN_CHANGE, p + MIN_CHANGE]
-    // Зоны куда МОЖЕМ попасть:
-    //   Низкая:  [0,       p - MIN_CHANGE]  (если p - MIN_CHANGE > 0)
-    //   Высокая: [p + MIN_CHANGE, 1]         (если p + MIN_CHANGE < 1)
-
-    const loMax = p - MIN_CHANGE;   // верхняя граница нижней зоны
-    const hiMin = p + MIN_CHANGE;   // нижняя граница верхней зоны
-
-    const hasLo = loMax > 0.001;
-    const hasHi = hiMin < 0.999;
-
-    let val;
-    if (hasLo && hasHi) {
-      // Обе зоны доступны — выбираем случайно, с весом пропорциональным размеру
-      const loSize = loMax;        // размер нижней зоны [0, loMax]
-      const hiSize = 1 - hiMin;    // размер верхней зоны [hiMin, 1]
-      if (r.next() < loSize / (loSize + hiSize)) {
-        val = r.range(0, loMax);
-      } else {
-        val = r.range(hiMin, 1);
-      }
-    } else if (hasLo) {
-      val = r.range(0, loMax);
-    } else if (hasHi) {
-      val = r.range(hiMin, 1);
-    } else {
-      // p ≈ 0.5 — ни одна зона не даёт 70%, берём противоположный конец
-      val = p < 0.5 ? r.range(0.85, 1) : r.range(0, 0.15);
-    }
-
-    child[i] = Math.min(1, Math.max(0, val));
-  }
-  return child;
+function mutate(parent, seed){
+  const r=new RNG(seed);
+  return parent.map(p=>{
+    const lo=p-MIN_DIFF, hi=p+MIN_DIFF;
+    const hasLo=lo>0.001, hasHi=hi<0.999;
+    let v;
+    if(hasLo&&hasHi){
+      v=r.next()<(lo/(lo+(1-hi)))?r.f(0,lo):r.f(hi,1);
+    } else if(hasLo){ v=r.f(0,lo);
+    } else if(hasHi){ v=r.f(hi,1);
+    } else { v=p<0.5?r.f(0.85,1):r.f(0,0.15); }
+    return Math.min(1,Math.max(0,v));
+  });
 }
 
-// Считаем среднее отличие двух ДНК (0=одинаковые, 1=максимально разные)
-function dnaDistance(a, b) {
-  let sum = 0;
-  for (let i = 0; i < 8; i++) sum += Math.abs(a[i] - b[i]);
-  return sum / 8;
+// ══════════════════════════════════════════
+// SVG ГЕНЕРАТОР
+// ══════════════════════════════════════════
+const W=440, H=260;
+
+function hsl(h,s,l){ return `hsl(${h|0},${s|0}%,${l|0}%)`; }
+function lx(h,a){ // lighten hex
+  if(!h.startsWith('#'))return h;
+  return '#'+[1,3,5].map(i=>Math.min(255,parseInt(h.slice(i,i+2),16)+a).toString(16).padStart(2,'0')).join('');
+}
+function dk(h,a){ // darken hex
+  if(!h.startsWith('#'))return h;
+  return '#'+[1,3,5].map(i=>Math.max(0,parseInt(h.slice(i,i+2),16)-a).toString(16).padStart(2,'0')).join('');
 }
 
-// Генерируем 2 варианта от родителя
-function makeVariants(parent) {
-  if (!parent) {
-    // Первое поколение — два совершенно разных стартовых варианта
-    return [makeSeedDNA(Date.now() % 99999), makeSeedDNA((Date.now() + 7777) % 99999)];
-  }
-  // Используем время + индекс как сид — каждый раз разные
-  const t = Date.now();
-  const v1 = mutate(parent, t % 99991);
-  const v2 = mutate(parent, (t + 12345) % 99991);
-  return [v1, v2];
+function getC(dna){
+  const temp=dna[3], mood=dna[6];
+  let sA,sB,sC;
+  if(mood<.25){sA='#f8c030';sB='#80b0e8';sC='#3870d8';}
+  else if(mood<.5){sA='#f0e040';sB='#50b8f8';sC='#2888d8';}
+  else if(mood<.75){sA='#f06020';sB='#c03810';sC='#781808';}
+  else{sA='#080818';sB='#0c1430';sC='#101838';}
+  const gh=95+temp*15|0, gl=14+temp*10|0;
+  const gnd=hsl(gh,48,gl), gnd2=hsl(gh,42,gl-4), gnd3=hsl(gh,36,gl-8);
+  const hH=25+dna[0]*15|0, hS=6+dna[0]*24|0, hL=72+(1-dna[0])*18|0;
+  const horse=hsl(hH,hS,hL), horseSh=hsl(hH,hS+10,hL-20);
+  const cH=240-temp*230|0;
+  const cape=hsl(cH,72,28), capeL=hsl(cH,72,42);
+  const aH=200+dna[1]*60|0;
+  const armor=hsl(aH,8+dna[1]*20,38+dna[1]*18);
+  const helm=hsl(aH,6+dna[1]*16,52+dna[1]*14);
+  const helmL=hsl(aH,6+dna[1]*16,66+dna[1]*10);
+  const gold=hsl(42,88+temp*8,46+temp*8);
+  const goldL=hsl(42,88+temp*8,62+temp*6);
+  const skin=hsl(26+temp*6,78+temp*6,58+temp*4);
+  const skinD=hsl(26+temp*6,70+temp*6,42+temp*4);
+  const beard=hsl(32+temp*8,34+temp*8,58+temp*8);
+  const beardL=hsl(32+temp*8,34+temp*8,74+temp*6);
+  return{sA,sB,sC,gnd,gnd2,gnd3,horse,horseSh,cape,capeL,armor,helm,helmL,gold,goldL,skin,skinD,beard,beardL};
 }
 
-// ═══════════════════════════════════════════════
-// ЦВЕТА ПО ДНК
-// ═══════════════════════════════════════════════
-function getColors(dna) {
-  const temp = dna[3];
-  const mood = dna[6];
+function makeSVG(dna, gen){
+  const c=getC(dna);
+  const build=dna[0], pose=dna[2], bgd=dna[4], det=dna[5], mood=dna[6], sz=dna[7];
+  const SH=Math.round(H*.52);
+  const parts=[];
+  const r=(x,y,w,h,fill,op)=>{
+    if(w<=0||h<=0)return;
+    let s=`<rect x="${x|0}" y="${y|0}" width="${Math.max(1,w|0)}" height="${Math.max(1,h|0)}" fill="${fill}"`;
+    if(op!=null&&op<1)s+=` opacity="${op.toFixed(2)}"`;
+    s+='/>';
+    parts.push(s);
+  };
+  const t=(x,y,txt,fill,sz2,anchor='start')=>{
+    parts.push(`<text x="${x|0}" y="${y|0}" fill="${fill}" font-family="monospace" font-size="${sz2}" font-weight="bold" text-anchor="${anchor}">${txt}</text>`);
+  };
 
-  // Небо
-  let skyA, skyB, skyC;
-  if      (mood < 0.25) { skyA='#f8c030'; skyB='#80b0e8'; skyC='#3870d8'; } // рассвет
-  else if (mood < 0.50) { skyA='#f0e040'; skyB='#50b8f8'; skyC='#2888d8'; } // день
-  else if (mood < 0.75) { skyA='#f06020'; skyB='#c03810'; skyC='#781808'; } // закат
-  else                  { skyA='#080818'; skyB='#0c1430'; skyC='#101838'; } // ночь
+  // НЕБО
+  r(0,0,W,SH,c.sC);
+  r(0,0,W,SH*.18,c.sA);
+  r(0,SH*.18,W,SH*.30,c.sB);
+  r(0,SH*.48,W,SH*.54,c.sC);
 
-  // Земля
-  const gh = Math.round(95 + temp * 15);
-  const gl = Math.round(14 + temp * 10);
-  const gnd  = `hsl(${gh},48%,${gl}%)`;
-  const gnd2 = `hsl(${gh},42%,${gl-4}%)`;
-  const gnd3 = `hsl(${gh},36%,${gl-8}%)`;
-
-  // Конь: от белого (build=0) до гнедого (build=1)
-  const horseL = Math.round(72 + (1-dna[0]) * 18);
-  const horseS = Math.round(6 + dna[0] * 24);
-  const horseH = Math.round(25 + dna[0] * 15);
-  const horse  = `hsl(${horseH},${horseS}%,${horseL}%)`;
-  const horseSh= `hsl(${horseH},${horseS+10}%,${horseL-20}%)`;
-
-  // Плащ: холод=синий/фиолет, тепло=алый
-  const capeH = Math.round(240 - temp * 230);
-  const cape  = `hsl(${capeH},72%,28%)`;
-  const capeL2= `hsl(${capeH},72%,42%)`;
-
-  // Броня: тип зависит от dna[1]
-  const armH = Math.round(200 + dna[1] * 60);
-  const armor = `hsl(${armH},${Math.round(8+dna[1]*20)}%,${Math.round(38+dna[1]*18)}%)`;
-  const helm  = `hsl(${armH},${Math.round(6+dna[1]*16)}%,${Math.round(52+dna[1]*14)}%)`;
-  const helmL = `hsl(${armH},${Math.round(6+dna[1]*16)}%,${Math.round(66+dna[1]*10)}%)`;
-
-  // Золото
-  const gold  = `hsl(42,${Math.round(88+temp*8)}%,${Math.round(46+temp*8)}%)`;
-  const goldL = `hsl(42,${Math.round(88+temp*8)}%,${Math.round(62+temp*6)}%)`;
-
-  // Кожа + борода
-  const skin  = `hsl(${Math.round(26+temp*6)},${Math.round(78+temp*6)}%,${Math.round(58+temp*4)}%)`;
-  const skinD = `hsl(${Math.round(26+temp*6)},${Math.round(70+temp*6)}%,${Math.round(42+temp*4)}%)`;
-  const beard = `hsl(${Math.round(32+temp*8)},${Math.round(34+temp*8)}%,${Math.round(58+temp*8)}%)`;
-  const beardL= `hsl(${Math.round(32+temp*8)},${Math.round(34+temp*8)}%,${Math.round(74+temp*6)}%)`;
-
-  return {skyA,skyB,skyC,gnd,gnd2,gnd3,horse,horseSh,cape,capeL:capeL2,armor,helm,helmL,gold,goldL,skin,skinD,beard,beardL};
-}
-
-// ═══════════════════════════════════════════════
-// РЕНДЕР
-// ═══════════════════════════════════════════════
-function renderDNA(cv, dna) {
-  cv.width  = CW;
-  cv.height = CH;
-  const ctx = cv.getContext('2d');
-  ctx.imageSmoothingEnabled = false;
-
-  const c   = getColors(dna);
-  const build  = dna[0];
-  const pose   = dna[2];
-  const bgd    = dna[4];
-  const det    = dna[5];
-  const mood   = dna[6];
-  const sz     = dna[7];
-  const SH     = Math.round(CH * 0.52);
-
-  // Helpers
-  function b(x,y,w,h,col,al) {
-    if (al != null) ctx.globalAlpha = al;
-    ctx.fillStyle = col;
-    ctx.fillRect(x|0, y|0, Math.max(1,w|0), Math.max(1,h|0));
-    if (al != null) ctx.globalAlpha = 1;
-  }
-  function lx(col, a) { // lighten hex
-    if (!col.startsWith('#')) return col;
-    return '#'+[1,3,5].map(i=>Math.min(255,parseInt(col.slice(i,i+2),16)+a).toString(16).padStart(2,'0')).join('');
-  }
-  function dx2(col, a) { // darken hex
-    if (!col.startsWith('#')) return col;
-    return '#'+[1,3,5].map(i=>Math.max(0,parseInt(col.slice(i,i+2),16)-a).toString(16).padStart(2,'0')).join('');
-  }
-  // hsl doesn't support lx/dx — helper for CSS colors
-  const LX = (col,a) => col.startsWith('#') ? lx(col,a) : col;
-  const DX = (col,a) => col.startsWith('#') ? dx2(col,a) : col;
-
-  // ── НЕБО ──
-  b(0, 0,           CW, SH,        c.skyC);
-  b(0, 0,           CW, SH*0.18,   c.skyA);
-  b(0, SH*0.18,     CW, SH*0.30,   c.skyB);
-  b(0, SH*0.48,     CW, SH*0.54,   c.skyC);
-
-  // Звёзды ночью
-  if (mood > 0.65) {
-    const rr = new RNG(42);
-    for (let i = 0; i < 80; i++) {
-      const br = Math.round(140 + rr.next()*110);
-      b(rr.next()*CW, rr.next()*SH*0.92, 2, 2, `#${br.toString(16).padStart(2,'0')}${br.toString(16).padStart(2,'0')}cc`);
+  // Звёзды (ночь)
+  if(mood>.65){
+    const rr=new RNG(42);
+    for(let i=0;i<60;i++){
+      const br=140+rr.next()*110|0;
+      const cl=`#${br.toString(16).padStart(2,'0')}${br.toString(16).padStart(2,'0')}cc`;
+      r(rr.next()*W, rr.next()*SH*.9, 2, 2, cl);
     }
   }
 
   // Солнце/луна
-  if (mood < 0.65) {
-    const sx = mood < 0.25 ? CW-80 : mood < 0.5 ? 55 : CW-70;
-    const sy = mood < 0.5 ? 34 : 44;
-    const sr = 22;
-    b(sx-sr, sy-sr, sr*2, sr*2, c.gold);
-    b(sx-sr+5, sy-sr+5, (sr-5)*2, (sr-5)*2, c.goldL);
-    for (let i = 0; i < 8; i++) {
-      const a = i/8*Math.PI*2;
-      for (let r2 = sr+4; r2 < sr+18; r2 += 4)
-        b(sx+Math.cos(a)*r2-1, sy+Math.sin(a)*r2-1, 3, 3, c.gold, 0.6);
+  if(mood<.65){
+    const sx=mood<.25?W-80:mood<.5?55:W-70, sy=mood<.5?34:44, sr=22;
+    r(sx-sr,sy-sr,sr*2,sr*2,c.gold);
+    r(sx-sr+5,sy-sr+5,(sr-5)*2,(sr-5)*2,c.goldL);
+    const rr2=new RNG(99);
+    for(let i=0;i<8;i++){
+      const a=i/8*Math.PI*2;
+      for(let rr3=sr+4;rr3<sr+18;rr3+=4)
+        r(sx+Math.cos(a)*rr3-1,sy+Math.sin(a)*rr3-1,3,3,c.gold,.55);
     }
   } else {
-    b(CW-80, 18, 40, 40, '#e0e0c8');
-    b(CW-74, 24, 28, 28, '#f0f0d8');
-    b(CW-78, 18, 20, 20, c.skyC);
+    r(W-80,18,40,40,'#e0e0c8'); r(W-74,24,28,28,'#f0f0d8'); r(W-78,18,20,20,c.sC);
   }
 
   // Облака
-  if (mood < 0.6) {
-    [[68,20,54],[188,13,44],[310,22,50]].forEach(([cx,cy,cw]) => {
-      if (bgd > 0.1) { b(cx-cw/2,cy,cw,10,'#f8f8f0'); b(cx-cw/2+6,cy-7,cw-12,10,'#ffffff'); }
+  if(mood<.6&&bgd>.1){
+    [[68,20,54],[188,13,44],[310,22,50]].forEach(([cx,cy,cw])=>{
+      r(cx-cw/2,cy,cw,10,'#f8f8f0'); r(cx-cw/2+6,cy-7,cw-12,10,'#fff');
     });
   }
 
-  // ── ЗЕМЛЯ ──
-  b(0, SH,    CW, 6,        mood > 0.65 ? c.gnd2 : '#52c018');
-  b(0, SH+6,  CW, 9,        c.gnd);
-  b(0, SH+15, CW, 12,       c.gnd2);
-  b(0, SH+27, CW, CH-SH-27, c.gnd3);
+  // ЗЕМЛЯ
+  r(0,SH,W,6,mood>.65?c.gnd2:'#52c018');
+  r(0,SH+6,W,9,c.gnd);
+  r(0,SH+15,W,12,c.gnd2);
+  r(0,SH+27,W,H-SH-27,c.gnd3);
 
   // Цветы
-  if (mood < 0.65 && bgd > 0.2) {
-    const rf = new RNG(77);
-    ['#f82020','#f8f820','#f820f8','#f87820','#20a8f8'].forEach((fc,i) => {
-      const fx = 18+i*68+rf.next()*18;
-      b(fx, SH+3, 4, 5, fc); b(fx+1, SH+8, 2, 6, c.gnd);
+  if(mood<.65&&bgd>.2){
+    const rr4=new RNG(77);
+    ['#f82020','#f8f820','#f820f8','#f87820','#20a8f8'].forEach((fc,i)=>{
+      const fx=18+i*68+rr4.next()*18;
+      r(fx,SH+3,4,5,fc); r(fx+1,SH+8,2,6,c.gnd);
     });
   }
 
-  // ── ПЕЙЗАЖ (зависит от bgd) ──
-
-  // Купол церкви
-  if (bgd > 0.1) {
-    const cx = Math.round(CW*0.69), cy = SH;
-    const q  = v => Math.round(v * (0.55 + bgd*0.38));
-    b(cx+q(8),  cy-q(22), q(3), q(10), '#c8a000');
-    b(cx+q(5),  cy-q(16), q(9), q(3),  '#c8a000');
-    [[14,0],[11,4],[8,8],[5,12],[2,16]].forEach(([w,dy],ji) => {
-      b(cx+q(9-w/2), cy-q(14)+q(dy), q(w), q(4), ji%2 ? '#00a800' : '#00c800');
-    });
-    b(cx+q(7), cy-q(2), q(8), q(5), '#f0e8d0');
-    b(cx, cy, q(22), CH-SH, '#f0e8d0');
-    b(cx+q(1), cy+1, q(20), CH-SH-1, '#f8f0e0');
-    b(cx+q(3), cy+q(4), q(6), q(10), '#90c0f8');
-    b(cx+q(13),cy+q(4), q(6), q(10), '#90c0f8');
-    b(cx+q(8), cy+q(18),q(7), CH-SH-q(18), '#704000');
-    b(cx, cy-q(2), q(22), q(2), '#c8a000');
+  // ПЕЙЗАЖ — купол
+  if(bgd>.1){
+    const cx=W*.69|0, cy=SH;
+    const q=v=>Math.round(v*(.55+bgd*.38));
+    r(cx+q(8),cy-q(22),q(3),q(10),'#c8a000');
+    r(cx+q(5),cy-q(16),q(9),q(3),'#c8a000');
+    [[14,0],[11,4],[8,8],[5,12],[2,16]].forEach(([w,dy],ji)=>
+      r(cx+q(9-w/2),cy-q(14)+q(dy),q(w),q(4),ji%2?'#00a800':'#00c800'));
+    r(cx+q(7),cy-q(2),q(8),q(5),'#f0e8d0');
+    r(cx,cy,q(22),H-SH,'#f0e8d0');
+    r(cx+q(1),cy+1,q(20),H-SH-1,'#f8f0e0');
+    r(cx+q(3),cy+q(4),q(6),q(10),'#90c0f8');
+    r(cx+q(13),cy+q(4),q(6),q(10),'#90c0f8');
+    r(cx+q(8),cy+q(18),q(7),H-SH-q(18),'#704000');
+    r(cx,cy-q(2),q(22),q(2),'#c8a000');
   }
 
   // Берёза
-  if (bgd > 0.35) {
-    const bx3 = Math.round(CW*0.82);
-    const p2  = v => Math.round(v*(0.5+bgd*0.32));
-    const th  = p2(62);
-    b(bx3-p2(3), SH-th, p2(6), th, '#f0f0e8');
-    b(bx3-p2(2), SH-th+1, p2(4), th-2, '#f8f8f0');
-    [[8,0],[22,2],[36,1],[48,0]].forEach(([yo,ddx]) => b(bx3-p2(3)+ddx, SH-th+yo, p2(2), p2(3), '#282820'));
-    [[0,28],[8,22],[16,16],[24,10],[30,6]].forEach(([yo,w]) => {
-      const g = Math.min(200, 80+yo*2.5)|0;
-      b(bx3-p2(w/2), SH-th-yo, p2(w), p2(7), `#00${g.toString(16).padStart(2,'0')}00`);
+  if(bgd>.35){
+    const bx3=W*.82|0, p2=v=>Math.round(v*(.5+bgd*.32)), th=p2(62);
+    r(bx3-p2(3),SH-th,p2(6),th,'#f0f0e8'); r(bx3-p2(2),SH-th+1,p2(4),th-2,'#f8f8f0');
+    [[8,0],[22,2],[36,1],[48,0]].forEach(([yo,ddx])=>r(bx3-p2(3)+ddx,SH-th+yo,p2(2),p2(3),'#282820'));
+    [[0,28],[8,22],[16,16],[24,10],[30,6]].forEach(([yo,w])=>{
+      const g=Math.min(200,80+yo*2.5)|0;
+      r(bx3-p2(w/2),SH-th-yo,p2(w),p2(7),`#00${g.toString(16).padStart(2,'0')}00`);
     });
   }
 
   // Частокол
-  if (bgd > 0.52) {
-    for (let i = 0; i < 10; i++) {
-      const fx = Math.round(CW*0.43)+i*9;
-      b(fx, SH-20, 6, 20, '#6c3800'); b(fx+1, SH-24, 4, 6, '#804000');
-    }
-    b(Math.round(CW*0.43), SH-13, 90, 3, '#5a3000');
+  if(bgd>.52){
+    for(let i=0;i<10;i++){const fx=W*.43|0+i*9; r(fx,SH-20,6,20,'#6c3800'); r(fx+1,SH-24,4,6,'#804000');}
+    r(W*.43|0,SH-13,90,3,'#5a3000');
   }
 
-  // Дерево
-  if (bgd > 0.70) {
-    const tx = Math.round(CW*0.57);
-    b(tx-3, SH-46, 6, 46, '#7a4420'); b(tx-2, SH-44, 4, 44, '#8a5228');
-    [[0,26],[8,20],[14,14],[20,8]].forEach(([yo,w]) => {
-      const g = Math.min(195, 85+yo*2.5)|0;
-      b(tx-w/2, SH-46-yo, w, 8, `#00${g.toString(16).padStart(2,'0')}00`);
+  // Доп дерево
+  if(bgd>.70){
+    const tx=W*.57|0;
+    r(tx-3,SH-46,6,46,'#7a4420'); r(tx-2,SH-44,4,44,'#8a5228');
+    [[0,26],[8,20],[14,14],[20,8]].forEach(([yo,w])=>{
+      const g=Math.min(195,85+yo*2.5)|0;
+      r(tx-w/2,SH-46-yo,w,8,`#00${g.toString(16).padStart(2,'0')}00`);
     });
   }
 
-  // ── КОНЬ + ИЛЬЯ ──
-  const heroSc = 0.52 + sz*0.54;
-  const s = v => Math.round(v * heroSc);
-  const bodyW = s(Math.round(84+build*16));
-  const OX = 10, OY = SH - s(80);
+  // ══ КОНЬ ══
+  const sc=.52+sz*.54, s=v=>Math.round(v*sc);
+  const bW=s(84+build*16|0);
+  const OX=10, OY=SH-s(80);
 
-  // Тень
-  b(OX+s(8), OY+s(86), bodyW+s(18), s(8), '#000', 0.18);
-
-  // Хвост
-  [[-s(2),s(28)],[s(2),s(33)],[-s(5),s(22)]].forEach(([ddx,dy]) => {
-    b(OX+ddx, OY+dy, s(6), s(18), c.horseSh);
-    b(OX+ddx+s(1), OY+dy+s(2), s(4), s(13), c.horse);
+  r(OX+s(8),OY+s(86),bW+s(18),s(8),'#000',.18);
+  [[-s(2),s(28)],[s(2),s(33)],[-s(5),s(22)]].forEach(([dx,dy])=>{
+    r(OX+dx,OY+dy,s(6),s(18),c.horseSh); r(OX+dx+s(1),OY+dy+s(2),s(4),s(13),c.horse);
   });
-
-  // Тело коня
-  b(OX+s(6),  OY+s(20), bodyW,     s(36), c.horse);
-  b(OX+s(8),  OY+s(22), bodyW-s(4),s(32), c.horse);  // highlights
-  b(OX+s(8),  OY+s(40), bodyW-s(4),s(14), c.horseSh);
+  r(OX+s(6),OY+s(20),bW,s(36),c.horse);
+  r(OX+s(8),OY+s(22),bW-s(4),s(32),lx(c.horse,10)||c.horse);
+  r(OX+s(8),OY+s(40),bW-s(4),s(14),c.horseSh);
 
   // Попона
-  const pw = Math.round(bodyW*0.62);
-  b(OX+s(15), OY+s(20), pw, s(12), c.cape);
-  b(OX+s(17), OY+s(22), pw-s(4), s(8), c.capeL);
-  const no = Math.round(3+det*5);
-  for (let i = 0; i < no; i++) {
-    const fx = OX+s(18)+i*Math.round(pw/no);
-    b(fx, OY+s(24), s(5), s(5), c.gold);
-    if (det > 0.3) b(fx+s(1), OY+s(25), s(3), s(3), c.goldL);
+  const pw=bW*.62|0;
+  r(OX+s(15),OY+s(20),pw,s(12),c.cape);
+  r(OX+s(17),OY+s(22),pw-s(4),s(8),c.capeL);
+  const no=3+det*5|0;
+  for(let i=0;i<no;i++){
+    const fx=OX+s(18)+i*(pw/no|0);
+    r(fx,OY+s(24),s(5),s(5),c.gold);
+    if(det>.3)r(fx+s(1),OY+s(25),s(3),s(3),c.goldL);
   }
-  b(OX+s(15), OY+s(32), pw, s(3), c.gold);
+  r(OX+s(15),OY+s(32),pw,s(3),c.gold);
 
-  // Грудь, шея, голова коня
-  b(OX+bodyW-s(4), OY+s(16), s(20), s(42), c.horse);
-  b(OX+bodyW-s(2), OY+s(12), s(14), s(10), c.horse);
-  b(OX+bodyW+s(2), OY+s(0),  s(26), s(24), c.horse);
-  b(OX+bodyW+s(4), OY+s(2),  s(22), s(20), c.horse);
-  b(OX+bodyW+s(12),OY-s(4),  s(16), s(12), c.horse);
-  b(OX+bodyW+s(14),OY+s(8),  s(14), s(16), c.horseSh);
-  b(OX+bodyW+s(14),OY+s(22), s(14), s(5),  '#f0a0a0');
-  // Глаз коня
-  b(OX+bodyW+s(4), OY+s(4), s(7), s(7), '#181010');
-  b(OX+bodyW+s(6), OY+s(5), s(3), s(3), '#000');
-  b(OX+bodyW+s(7), OY+s(6), s(2), s(2), '#f8f8f8');
-  // Грива
-  b(OX+bodyW-s(8), OY+s(0), s(12), s(28), c.horseSh);
-  b(OX+bodyW-s(12),OY+s(0), s(10), s(18), c.horse);
-  // Уздечка
-  b(OX+bodyW+s(2), OY+s(10), s(28), s(4), c.cape);
-  b(OX+bodyW+s(16),OY+s(10), s(4),  s(18),c.cape);
+  // Грудь+шея+голова коня
+  r(OX+bW-s(4),OY+s(16),s(20),s(42),c.horse);
+  r(OX+bW-s(2),OY+s(12),s(14),s(10),c.horse);
+  r(OX+bW+s(2),OY,s(26),s(24),c.horse);
+  r(OX+bW+s(4),OY+s(2),s(22),s(20),c.horse);
+  r(OX+bW+s(12),OY-s(4),s(16),s(12),c.horse);
+  r(OX+bW+s(14),OY+s(8),s(14),s(16),c.horseSh);
+  r(OX+bW+s(14),OY+s(22),s(14),s(5),'#f0a0a0');
+  r(OX+bW+s(4),OY+s(4),s(7),s(7),'#181010');
+  r(OX+bW+s(6),OY+s(5),s(3),s(3),'#000');
+  r(OX+bW+s(7),OY+s(6),s(2),s(2),'#f8f8f8');
+  r(OX+bW-s(8),OY,s(12),s(28),c.horseSh);
+  r(OX+bW-s(12),OY,s(10),s(18),c.horse);
+  r(OX+bW+s(2),OY+s(10),s(28),s(4),c.cape);
+  r(OX+bW+s(16),OY+s(10),s(4),s(18),c.cape);
 
-  // Ноги (поза)
-  const legMode = pose < 0.33 ? 'trot' : pose < 0.66 ? 'gallop' : 'rear';
-  const legs = legMode==='trot' ?
-    [{x:s(10),h:s(26),up:false},{x:s(28),h:s(22),up:false},{x:bodyW-s(26),h:s(26),up:false},{x:bodyW-s(10),h:s(22),up:false}] :
-    legMode==='gallop' ?
-    [{x:s(10),h:s(28),up:false},{x:s(28),h:s(22),up:false},{x:bodyW-s(26),h:s(28),up:false},{x:bodyW-s(10),h:s(12),up:true}] :
-    [{x:s(10),h:s(32),up:false},{x:s(28),h:s(30),up:false},{x:bodyW-s(26),h:s(8),up:true}, {x:bodyW-s(10),h:s(6),up:true}];
-
-  legs.forEach(({x,h,up}) => {
-    if (up) {
-      b(OX+x, OY+s(60), s(10), h, c.horse);
-      b(OX+x+s(2), OY+s(60)+h, s(12), s(12), c.horse);
-      b(OX+x+s(1), OY+s(60)+h+s(10), s(13), s(5), '#282018');
-    } else {
-      b(OX+x, OY+s(60), s(10), h, c.horse);
-      b(OX+x+s(1), OY+s(62), s(7), h-s(2), c.horse);
-      b(OX+x-s(2), OY+s(60)+h, s(14), s(6), '#282018');
-    }
+  // Ноги
+  const lm=pose<.33?'trot':pose<.66?'gallop':'rear';
+  const legs=lm==='trot'?
+    [{x:s(10),h:s(26),up:0},{x:s(28),h:s(22),up:0},{x:bW-s(26),h:s(26),up:0},{x:bW-s(10),h:s(22),up:0}]:
+    lm==='gallop'?
+    [{x:s(10),h:s(28),up:0},{x:s(28),h:s(22),up:0},{x:bW-s(26),h:s(28),up:0},{x:bW-s(10),h:s(12),up:1}]:
+    [{x:s(10),h:s(32),up:0},{x:s(28),h:s(30),up:0},{x:bW-s(26),h:s(8),up:1},{x:bW-s(10),h:s(6),up:1}];
+  legs.forEach(({x,h,up})=>{
+    r(OX+x,OY+s(60),s(10),h,c.horse);
+    if(up){r(OX+x+s(2),OY+s(60)+h,s(12),s(12),c.horse);r(OX+x+s(1),OY+s(60)+h+s(10),s(13),s(5),'#282018');}
+    else{r(OX+x-s(2),OY+s(60)+h,s(14),s(6),'#282018');}
   });
 
-  // ═══ ИЛЬЯ ═══
-  const IX = OX+s(18), IY = OY-s(18);
-  const IW = s(Math.round(26+build*16));
-
-  // Плащ
-  b(IX-s(12), IY-s(30), s(15), s(60), c.cape);
-  b(IX-s(10), IY-s(28), s(11), s(56), c.capeL);
-  b(IX-s(16), IY-s(6),  s(8),  s(34), c.cape);
-  b(IX-s(19), IY+s(6),  s(6),  s(20), c.cape);
+  // ══ ИЛЬЯ ══
+  const IX=OX+s(18), IY=OY-s(18), IW=s(26+build*16|0);
+  r(IX-s(12),IY-s(30),s(15),s(60),c.cape);
+  r(IX-s(10),IY-s(28),s(11),s(56),c.capeL);
+  r(IX-s(16),IY-s(6),s(8),s(34),c.cape);
 
   // Щит
-  const shW = s(Math.round(18+build*8));
-  b(IX-s(6),  IY-s(28), shW, Math.round(shW*1.25), c.cape);
-  b(IX-s(4),  IY-s(26), shW-s(4), Math.round((shW-s(4))*1.2), c.capeL);
-  b(IX,       IY-s(24), s(8),  s(3), c.gold);
-  b(IX+s(3),  IY-s(21), s(2),  s(10),c.gold);
-  b(IX-s(1),  IY-s(15), s(10), s(2), c.gold);
-  b(IX-s(6),  IY-s(30), shW,   s(2), c.gold);
-  b(IX-s(6),  IY-s(28), s(2),  Math.round(shW*1.25), c.gold);
+  const shW=s(18+build*8|0);
+  r(IX-s(6),IY-s(28),shW,shW*1.25|0,c.cape);
+  r(IX-s(4),IY-s(26),shW-s(4),(shW-s(4))*1.2|0,c.capeL);
+  r(IX,IY-s(24),s(8),s(3),c.gold); r(IX+s(3),IY-s(21),s(2),s(10),c.gold);
+  r(IX-s(1),IY-s(15),s(10),s(2),c.gold);
+  r(IX-s(6),IY-s(30),shW,s(2),c.gold); r(IX-s(6),IY-s(28),s(2),shW*1.25|0,c.gold);
 
   // Кольчуга
-  b(IX+s(8),  IY-s(34), IW, s(44), c.armor);
-  b(IX+s(10), IY-s(32), IW-s(4), s(40), c.armor);
-  const nr = Math.round(3+det*5), nc = Math.round(2+det*3);
-  for (let rr=0; rr<nr; rr++) for (let cc=0; cc<nc; cc++) {
-    const bxx = IX+s(11)+cc*Math.round((IW-s(6))/nc);
-    const byy = IY-s(31)+rr*Math.round(s(38)/nr);
-    b(bxx, byy, s(5), s(4), c.armor);
-    if (det > 0.3) b(bxx+s(1), byy+s(1), s(3), s(2), c.helm);
+  r(IX+s(8),IY-s(34),IW,s(44),c.armor);
+  r(IX+s(10),IY-s(32),IW-s(4),s(40),c.armor);
+  const nr=3+det*5|0, nc=2+det*3|0;
+  for(let rr5=0;rr5<nr;rr5++)for(let cc=0;cc<nc;cc++){
+    r(IX+s(11)+cc*(IW-s(6))/nc|0,IY-s(31)+rr5*s(38)/nr|0,s(5),s(4),c.armor);
+    if(det>.3)r(IX+s(12)+cc*(IW-s(6))/nc|0,IY-s(30)+rr5*s(38)/nr|0,s(3),s(2),c.helm);
   }
-  // Наплечники
-  const np = Math.round(IW*0.38);
-  b(IX+s(8),      IY-s(40), np, s(8), c.helm);
-  b(IX+s(8)+Math.round(IW*0.62), IY-s(40), np, s(8), c.helm);
+  r(IX+s(8),IY-s(40),IW*.38|0,s(8),c.helm);
+  r(IX+s(8)+IW*.62|0,IY-s(40),IW*.38|0,s(8),c.helm);
+  r(IX+s(8),IY+s(9),IW,s(6),c.gold);
 
-  // Пояс
-  b(IX+s(8), IY+s(9), IW, s(6), c.gold);
-  for (let i=0; i<Math.round(3+det*3); i++)
-    b(IX+s(10)+i*Math.round(IW/Math.round(3+det*3)), IY+s(10), s(4), s(4), c.gold);
+  // Сапоги+стремена
+  r(IX+s(10),IY+s(15),s(12),s(11),'#501808');
+  r(IX+s(10)+IW-s(14),IY+s(15),s(12),s(11),'#501808');
+  r(IX+s(8),IY+s(24),s(14),s(4),'#381005');
+  r(IX+s(8)+IW-s(14),IY+s(24),s(14),s(4),'#381005');
+  r(IX+s(8),IY+s(28),s(14),s(3),c.armor);
+  r(IX+s(8)+IW-s(14),IY+s(28),s(14),s(3),c.armor);
+  r(IX+s(8)+IW*.35|0,IY-s(40),s(12),s(9),c.skin);
 
-  // Сапоги
-  b(IX+s(10), IY+s(15), s(12), s(11), '#501808');
-  b(IX+s(10)+IW-s(14), IY+s(15), s(12), s(11), '#501808');
-  b(IX+s(8),  IY+s(24), s(14), s(4), '#381005');
-  b(IX+s(8)+IW-s(14), IY+s(24), s(14), s(4), '#381005');
-  // Стремена
-  b(IX+s(8), IY+s(28), s(14), s(3), c.armor);
-  b(IX+s(8)+IW-s(14), IY+s(28), s(14), s(3), c.armor);
+  // ГОЛОВА
+  const HX=IX+s(6), HY=IY-s(82), HW=s(22+build*10|0), HH=s(32+build*5|0);
+  r(HX,HY,HW,HH,c.skin); r(HX+s(2),HY+s(2),HW-s(4),HH-s(4),c.skin);
+  r(HX+s(3),HY+s(7),s(7),s(7),'#181008'); r(HX+s(5),HY+s(9),s(3),s(3),'#000'); r(HX+s(6),HY+s(10),s(2),s(2),'#f8f8f8');
+  r(HX+HW-s(10),HY+s(7),s(7),s(7),'#181008'); r(HX+HW-s(8),HY+s(9),s(3),s(3),'#000'); r(HX+HW-s(7),HY+s(10),s(2),s(2),'#f8f8f8');
+  r(HX+s(3),HY+s(5),s(7),s(2),c.skinD); r(HX+HW-s(10),HY+s(5),s(7),s(2),c.skinD);
+  r(HX+HW/2-s(3)|0,HY+s(15),s(6),s(6),c.skinD);
+  r(HX+s(4),HY+s(24),HW-s(8),s(3),c.skinD);
 
-  // Шея
-  b(IX+s(8)+Math.round(IW*0.35), IY-s(40), s(12), s(9), c.skin);
-
-  // ── ГОЛОВА ИЛЬИ ──
-  const HX = IX+s(6), HY = IY-s(82);
-  const HW = s(Math.round(22+build*10));
-  const HH = s(Math.round(32+build*5));
-
-  b(HX, HY, HW, HH, c.skin);
-  b(HX+s(2), HY+s(2), HW-s(4), HH-s(4), c.skin);
-
-  // Глаза
-  b(HX+s(3),    HY+s(7), s(7), s(7), '#181008');
-  b(HX+s(5),    HY+s(9), s(3), s(3), '#000');
-  b(HX+s(6),    HY+s(10),s(2), s(2), '#f8f8f8');
-  b(HX+HW-s(10),HY+s(7), s(7), s(7), '#181008');
-  b(HX+HW-s(8), HY+s(9), s(3), s(3), '#000');
-  b(HX+HW-s(7), HY+s(10),s(2), s(2), '#f8f8f8');
-  // Брови
-  b(HX+s(3),    HY+s(5), s(7), s(2), c.skinD);
-  b(HX+HW-s(10),HY+s(5), s(7), s(2), c.skinD);
-  // Нос
-  b(HX+Math.round(HW/2)-s(3), HY+s(15), s(6), s(6), c.skinD);
-  // Рот
-  b(HX+s(4), HY+s(24), HW-s(8), s(3), c.skinD);
-
-  // Усы (размер по build)
-  const mu = Math.round(1 + build*1.8);
-  [-1, 1].forEach(side => {
-    const ux = side < 0 ? HX-s(4) : HX+HW-s(4);
-    b(ux, HY+s(20), s(8)*mu*0.6|0, s(5), c.beard);
-    b(ux+(side<0 ? -(s(5)*mu*0.4|0) : s(6)*mu*0.35|0), HY+s(15), s(5)*mu*0.5|0, s(6), c.beard);
-    b(ux+(side<0 ? -(s(6)*mu*0.38|0) : s(7)*mu*0.32|0), HY+s(9), s(4)*mu*0.45|0, s(7), c.beard);
-    b(ux+(side<0 ? -(s(5)*mu*0.32|0) : s(6)*mu*0.28|0), HY+s(3), s(3)*mu*0.4|0, s(7), c.beardL);
+  // Усы
+  const mu=1+build*1.8;
+  [-1,1].forEach(side=>{
+    const ux=side<0?HX-s(4):HX+HW-s(4);
+    r(ux,HY+s(20),s(8)*mu*.6|0,s(5),c.beard);
+    r(ux+(side<0?-(s(5)*mu*.4|0):s(6)*mu*.35|0),HY+s(15),s(5)*mu*.5|0,s(6),c.beard);
+    r(ux+(side<0?-(s(6)*mu*.38|0):s(7)*mu*.32|0),HY+s(9),s(4)*mu*.45|0,s(7),c.beard);
+    r(ux+(side<0?-(s(5)*mu*.32|0):s(6)*mu*.28|0),HY+s(3),s(3)*mu*.4|0,s(7),c.beardL);
   });
-
-  // Борода
-  b(HX-s(2), HY+HH-s(2), HW+s(4), s(12), c.beard);
-  b(HX,      HY+HH+s(10), HW,     s(9),  c.beard);
-  b(HX+s(2), HY+HH+s(19), HW-s(4),s(7),  c.beard);
-  b(HX,      HY+HH-s(1),  HW,     s(8),  c.beardL);
+  r(HX-s(2),HY+HH-s(2),HW+s(4),s(12),c.beard);
+  r(HX,HY+HH+s(10),HW,s(9),c.beard);
+  r(HX,HY+HH-s(1),HW,s(8),c.beardL);
 
   // Шлем
-  b(HX-s(4), HY-s(20), HW+s(8), s(22), c.helm);
-  b(HX-s(2), HY-s(18), HW+s(4), s(18), c.helmL);
-  b(HX+Math.round(HW/2)-s(8), HY-s(30), s(16), s(12), c.helm);
-  b(HX+Math.round(HW/2)-s(6), HY-s(28), s(12), s(10), c.helmL);
-  b(HX+Math.round(HW/2)-s(4), HY-s(38), s(8),  s(10), c.helm);
-  b(HX+Math.round(HW/2)-s(2), HY-s(42), s(4),  s(6),  c.helmL);
-  // Ободок
-  b(HX-s(6), HY-s(2), HW+s(12), s(5), c.gold);
-  b(HX-s(6), HY-s(2), HW+s(12), s(2), c.goldL);
-  // Бармица
-  b(HX-s(4), HY, s(5), HH+s(12), c.armor);
-  b(HX+HW-s(1), HY, s(5), HH+s(12), c.armor);
-  // Украшение
-  if (det > 0.3) {
-    b(HX+Math.round(HW/2)-s(3), HY-s(40), s(6), s(5), c.gold);
-    b(HX+Math.round(HW/2)-s(5), HY-s(38), s(10), s(2), c.gold);
-  }
-  if (det > 0.6) {
-    b(HX-s(8),    HY-s(14), s(4), s(4), c.gold);
-    b(HX+HW+s(4), HY-s(14), s(4), s(4), c.gold);
-  }
+  r(HX-s(4),HY-s(20),HW+s(8),s(22),c.helm);
+  r(HX-s(2),HY-s(18),HW+s(4),s(18),c.helmL);
+  r(HX+HW/2-s(8)|0,HY-s(30),s(16),s(12),c.helm);
+  r(HX+HW/2-s(6)|0,HY-s(28),s(12),s(10),c.helmL);
+  r(HX+HW/2-s(4)|0,HY-s(38),s(8),s(10),c.helm);
+  r(HX+HW/2-s(2)|0,HY-s(42),s(4),s(6),c.helmL);
+  r(HX-s(6),HY-s(2),HW+s(12),s(5),c.gold);
+  r(HX-s(6),HY-s(2),HW+s(12),s(2),c.goldL);
+  r(HX-s(4),HY,s(5),HH+s(12),c.armor); r(HX+HW-s(1),HY,s(5),HH+s(12),c.armor);
+  if(det>.3){r(HX+HW/2-s(3)|0,HY-s(40),s(6),s(5),c.gold);r(HX+HW/2-s(5)|0,HY-s(38),s(10),s(2),c.gold);}
+  if(det>.6){r(HX-s(8),HY-s(14),s(4),s(4),c.gold);r(HX+HW+s(4),HY-s(14),s(4),s(4),c.gold);}
 
   // Копьё
-  const spX = IX+s(8)+IW+s(10);
-  b(spX,     IY-s(120), s(5), s(148), '#703808');
-  b(spX+s(1),IY-s(120), s(2), s(148), '#906018');
-  b(spX-s(2),IY-s(124), s(9), s(9),   c.helm);
-  b(spX-s(1),IY-s(128), s(7), s(6),   c.helmL);
-  b(spX,     IY-s(134), s(5), s(12),  '#f8f0a0');
-  const fW = s(Math.round(18+det*16)), fH = s(Math.round(12+det*8));
-  b(spX+s(4), IY-s(134), fW, fH,        c.cape);
-  b(spX+s(4), IY-s(134), fW, Math.round(fH*0.4), c.capeL);
-  b(spX+s(9), IY-s(134), s(3), fH,      c.gold);
-  b(spX-s(2), IY-s(72),  s(8), s(9),    c.skin);
+  const spX=IX+s(8)+IW+s(10);
+  r(spX,IY-s(120),s(5),s(148),'#703808'); r(spX+s(1),IY-s(120),s(2),s(148),'#906018');
+  r(spX-s(2),IY-s(124),s(9),s(9),c.helm); r(spX-s(1),IY-s(128),s(7),s(6),c.helmL);
+  r(spX,IY-s(134),s(5),s(12),'#f8f0a0');
+  const fW=s(18+det*16|0), fH=s(12+det*8|0);
+  r(spX+s(4),IY-s(134),fW,fH,c.cape); r(spX+s(4),IY-s(134),fW,fH*.4|0,c.capeL);
+  r(spX+s(9),IY-s(134),s(3),fH,c.gold);
+  r(spX-s(2),IY-s(72),s(8),s(9),c.skin);
 
-  // ═══ АЛЁША ═══
-  const AX = Math.round(CW*0.50), AY = SH - s(40);
-  const AW = s(Math.round(20+build*8));
-
-  b(AX-s(2), AY+s(70), AW+s(16), s(6), '#000', 0.15);
-  // Сапоги
-  b(AX, AY+s(56), s(11), s(12), '#c00000');
-  b(AX+AW-s(3), AY+s(56), s(11), s(12), '#c00000');
-  b(AX-s(1), AY+s(62), s(13), s(6), '#900000');
-  b(AX+AW-s(4), AY+s(62), s(13), s(6), '#900000');
-  // Штаны
-  b(AX, AY+s(38), s(11), s(20), '#0828b0');
-  b(AX+AW-s(3), AY+s(38), s(11), s(20), '#0828b0');
-  // Кафтан
-  b(AX-s(2), AY+s(5), AW+s(6), s(36), '#006800');
-  b(AX, AY+s(7), AW+s(2), s(32), '#009000');
-  const nao = Math.round(2+det*3);
-  for (let i=0; i<nao; i++) {
-    const ox2 = AX+s(2)+i*Math.round((AW+s(2))/nao);
-    b(ox2, AY+s(9),  s(5), s(3), c.gold);
-    b(ox2, AY+s(17), s(5), s(3), c.gold);
-    b(ox2, AY+s(25), s(5), s(3), c.gold);
+  // ══ АЛЁША ══
+  const AX=W*.50|0, AY=SH-s(40), AW=s(20+build*8|0);
+  r(AX-s(2),AY+s(70),AW+s(16),s(6),'#000',.15);
+  r(AX,AY+s(56),s(11),s(12),'#c00000'); r(AX+AW-s(3),AY+s(56),s(11),s(12),'#c00000');
+  r(AX-s(1),AY+s(62),s(13),s(6),'#900000'); r(AX+AW-s(4),AY+s(62),s(13),s(6),'#900000');
+  r(AX,AY+s(38),s(11),s(20),'#0828b0'); r(AX+AW-s(3),AY+s(38),s(11),s(20),'#0828b0');
+  r(AX-s(2),AY+s(5),AW+s(6),s(36),'#006800'); r(AX,AY+s(7),AW+s(2),s(32),'#009000');
+  const nao=2+det*3|0;
+  for(let i=0;i<nao;i++){
+    const ox2=AX+s(2)+i*((AW+s(2))/nao|0);
+    r(ox2,AY+s(9),s(5),s(3),c.gold); r(ox2,AY+s(17),s(5),s(3),c.gold); r(ox2,AY+s(25),s(5),s(3),c.gold);
   }
-  b(AX-s(2), AY+s(5), AW+s(6), s(3), c.gold);
-  b(AX-s(2), AY+s(5), s(2), s(36), c.gold);
-  b(AX+AW+s(4), AY+s(5), s(2), s(36), c.gold);
-  b(AX-s(2), AY+s(41), AW+s(6), s(5), c.gold);
-  b(AX-s(2), AY+s(41), AW+s(6), s(2), c.goldL);
-  // Голова
-  b(AX+s(2), AY-s(26), AW, s(32), c.skin);
-  b(AX+s(4), AY-s(24), AW-s(4), s(28), c.skin);
-  // Глаза
-  b(AX+s(4), AY-s(20), s(5), s(5), '#000');
-  b(AX+s(5), AY-s(19), s(2), s(2), '#f8f8f8');
-  b(AX+AW-s(7), AY-s(20), s(5), s(5), '#000');
-  b(AX+AW-s(6), AY-s(19), s(2), s(2), '#f8f8f8');
-  // Нос
-  b(AX+Math.round(AW/2)-s(2), AY-s(14), s(5), s(4), c.skinD);
-  // Улыбка
-  b(AX+s(3), AY-s(7), AW-s(4), s(5), '#900000');
-  b(AX+s(5), AY-s(5), AW-s(8), s(4), '#f8c0c0');
-  b(AX+s(5), AY-s(7), s(4), s(2), '#f8f8e0');
-  b(AX+AW-s(9), AY-s(7), s(4), s(2), '#f8f8e0');
-  // Усы вверх
-  const au = Math.round(1+build*1.4);
-  [-1,1].forEach(side => {
-    const ux2 = side < 0 ? AX-s(2) : AX+AW-s(4);
-    b(ux2, AY-s(8), s(8)*au*0.55|0, s(4), c.beard);
-    b(ux2+(side<0?-(s(4)*au*0.35|0):s(5)*au*0.3|0), AY-s(12), s(5)*au*0.45|0, s(5), c.beard);
-    b(ux2+(side<0?-(s(5)*au*0.35|0):s(6)*au*0.3|0), AY-s(17), s(4)*au*0.4|0,  s(6), c.beard);
-    b(ux2+(side<0?-(s(4)*au*0.3|0): s(5)*au*0.28|0),AY-s(22), s(3)*au*0.35|0, s(5), c.beardL);
+  r(AX-s(2),AY+s(5),AW+s(6),s(3),c.gold); r(AX-s(2),AY+s(5),s(2),s(36),c.gold); r(AX+AW+s(4),AY+s(5),s(2),s(36),c.gold);
+  r(AX-s(2),AY+s(41),AW+s(6),s(5),c.gold); r(AX-s(2),AY+s(41),AW+s(6),s(2),c.goldL);
+  r(AX+s(2),AY-s(26),AW,s(32),c.skin); r(AX+s(4),AY-s(24),AW-s(4),s(28),c.skin);
+  r(AX+s(4),AY-s(20),s(5),s(5),'#000'); r(AX+s(5),AY-s(19),s(2),s(2),'#f8f8f8');
+  r(AX+AW-s(7),AY-s(20),s(5),s(5),'#000'); r(AX+AW-s(6),AY-s(19),s(2),s(2),'#f8f8f8');
+  r(AX+AW/2-s(2)|0,AY-s(14),s(5),s(4),c.skinD);
+  r(AX+s(3),AY-s(7),AW-s(4),s(5),'#900000'); r(AX+s(5),AY-s(5),AW-s(8),s(4),'#f8c0c0');
+  r(AX+s(5),AY-s(7),s(4),s(2),'#f8f8e0'); r(AX+AW-s(9),AY-s(7),s(4),s(2),'#f8f8e0');
+  r(AX+s(3),AY-s(9),s(2),s(3),c.skinD); r(AX+AW-s(4),AY-s(9),s(2),s(3),c.skinD);
+  const au=1+build*1.4;
+  [-1,1].forEach(side=>{
+    const ux2=side<0?AX-s(2):AX+AW-s(4);
+    r(ux2,AY-s(8),s(8)*au*.55|0,s(4),c.beard);
+    r(ux2+(side<0?-(s(4)*au*.35|0):s(5)*au*.3|0),AY-s(12),s(5)*au*.45|0,s(5),c.beard);
+    r(ux2+(side<0?-(s(5)*au*.35|0):s(6)*au*.3|0),AY-s(17),s(4)*au*.4|0,s(6),c.beard);
+    r(ux2+(side<0?-(s(4)*au*.3|0):s(5)*au*.28|0),AY-s(22),s(3)*au*.35|0,s(5),c.beardL);
   });
-  b(AX+s(2), AY-s(2), AW-s(2), s(6), c.beard);
-  // Шапка
-  b(AX+s(2), AY-s(40), AW-s(2), s(16), '#800000');
-  b(AX+s(4), AY-s(38), AW-s(6), s(12), '#a00000');
-  b(AX, AY-s(40), AW+s(4), s(8), '#d8d8d8');
-  b(AX+s(2), AY-s(40), AW, s(5), '#e8e8e8');
-  b(AX+s(4), AY-s(50), AW-s(4), s(12), '#600000');
-  b(AX+s(6), AY-s(56), AW-s(8), s(8),  '#800000');
-  b(AX+Math.round(AW/2)-s(4), AY-s(56), s(8), s(3), c.gold);
-  b(AX+Math.round(AW/2)-s(2), AY-s(60), s(4), s(5), c.gold);
-  // Лук
-  b(AX+AW+s(6), AY-s(26), s(5), s(72), '#703808');
-  b(AX+AW+s(6), AY-s(28), s(5), s(3),  '#703808');
-  b(AX+AW+s(6), AY+s(44), s(5), s(3),  '#703808');
-  b(AX+AW+s(11),AY-s(26), s(3), s(72), '#c0c0a8');
-  b(AX+AW+s(6), AY+s(6),  s(22),s(3),  '#703808');
-  b(AX+AW+s(26),AY+s(4),  s(5), s(8),  c.gold);
-  // Колчан
-  b(AX-s(10), AY+s(6),  s(9), s(26), '#703808');
-  b(AX-s(9),  AY+s(4),  s(7), s(5),  c.gold);
-  for (let i=0; i<4; i++) b(AX-s(8)+i, AY+s(2), s(2), s(5), '#c8a000');
+  r(AX+s(2),AY-s(2),AW-s(2),s(6),c.beard);
+  r(AX+s(2),AY-s(40),AW-s(2),s(16),'#800000'); r(AX+s(4),AY-s(38),AW-s(6),s(12),'#a00000');
+  r(AX,AY-s(40),AW+s(4),s(8),'#d8d8d8'); r(AX+s(2),AY-s(40),AW,s(5),'#e8e8e8');
+  r(AX+s(4),AY-s(50),AW-s(4),s(12),'#600000'); r(AX+s(6),AY-s(56),AW-s(8),s(8),'#800000');
+  r(AX+AW/2-s(4)|0,AY-s(56),s(8),s(3),c.gold); r(AX+AW/2-s(2)|0,AY-s(60),s(4),s(5),c.gold);
+  r(AX+AW+s(6),AY-s(26),s(5),s(72),'#703808');
+  r(AX+AW+s(6),AY-s(28),s(5),s(3),'#703808'); r(AX+AW+s(6),AY+s(44),s(5),s(3),'#703808');
+  r(AX+AW+s(11),AY-s(26),s(3),s(72),'#c0c0a8');
+  r(AX+AW+s(6),AY+s(6),s(22),s(3),'#703808'); r(AX+AW+s(26),AY+s(4),s(5),s(8),c.gold);
+  r(AX-s(10),AY+s(6),s(9),s(26),'#703808'); r(AX-s(9),AY+s(4),s(7),s(5),c.gold);
+  for(let i=0;i<4;i++) r(AX-s(8)+i,AY+s(2),s(2),s(5),'#c8a000');
 
-  // Подпись гена
-  ctx.globalAlpha = 0.85;
-  b(0, CH-18, CW, 18, '#000');
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = c.gold;
-  ctx.font = 'bold 8px monospace';
-  ctx.textBaseline = 'top';
-  const posLabel = pose<0.33?'рысь':pose<0.66?'галоп':'дыбы';
-  const skyLabel = mood<0.25?'рассвет':mood<0.5?'день':mood<0.75?'закат':'ночь';
-  ctx.fillText(`П${GEN} тело:${(build*100)|0}% ${posLabel} ${skyLabel} фон:${(bgd*100)|0}% дет:${(det*100)|0}%`, 4, CH-14);
+  // Подпись
+  r(0,H-18,W,18,'#000',.88);
+  const posLbl=pose<.33?'рысь':pose<.66?'галоп':'дыбы';
+  const skyLbl=mood<.25?'рассвет':mood<.5?'день':mood<.75?'закат':'ночь';
+  t(4,H-6,`П${gen} тело:${build*100|0}% ${posLbl} ${skyLbl} фон:${bgd*100|0}%`,c.gold,8);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${parts.join('')}</svg>`;
 }
 
-// ═══════════════════════════════════════════════
+// ══════════════════════════════════════════
 // UI
-// ═══════════════════════════════════════════════
-// Генбар (30 делений)
-const genbar = document.getElementById('genbar');
-for (let i = 0; i < MAX_GEN; i++) {
-  const d = document.createElement('div');
-  d.className = 'gb'; d.id = 'g'+i;
+// ══════════════════════════════════════════
+const genbar=document.getElementById('genbar');
+for(let i=0;i<MAX_GEN;i++){
+  const d=document.createElement('div');
+  d.className='gb';d.id='g'+i;
   genbar.appendChild(d);
 }
-
-function updBar() {
-  for (let i = 0; i < MAX_GEN; i++) {
-    const el = document.getElementById('g'+i);
-    el.className = 'gb' + (i < GEN-1 ? ' done' : i === GEN-1 ? ' cur' : '');
+function updBar(){
+  for(let i=0;i<MAX_GEN;i++){
+    const el=document.getElementById('g'+i);
+    el.className='gb'+(i<GEN-1?' done':i===GEN-1?' cur':'');
   }
 }
 
-function showDiff(v1, v2) {
-  if (!PARENT) { document.getElementById('diffbar').textContent=''; return; }
-  const d1 = (dnaDistance(PARENT, v1)*100)|0;
-  const d2 = (dnaDistance(PARENT, v2)*100)|0;
-  document.getElementById('diffbar').textContent =
-    `Отличие от родителя: вариант 1 = ${d1}%, вариант 2 = ${d2}% (мин. 70%)`;
-}
-
-function showGrid(variants) {
-  VARIANTS = variants;
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-  variants.forEach((dna, i) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    const cv = document.createElement('canvas');
-    renderDNA(cv, dna);
-    const lbl = document.createElement('div');
-    lbl.className = 'clabel';
-    lbl.textContent = `ВАРИАНТ ${i+1} — НАЖМИ`;
-    card.appendChild(cv);
-    card.appendChild(lbl);
-    card.addEventListener('click', () => pick(dna, cv));
-    grid.appendChild(card);
-  });
-  showDiff(variants[0], variants[1]);
-}
-
-function pick(dna, cv) {
-  // Добавляем в историю
-  const mini = document.createElement('canvas');
-  mini.width = 60; mini.height = Math.round(60*CH/CW);
-  const mctx = mini.getContext('2d');
-  mctx.imageSmoothingEnabled = false;
-  mctx.drawImage(cv, 0, 0, mini.width, mini.height);
-  const hi = document.createElement('div'); hi.className = 'hi';
-  const sp = document.createElement('p'); sp.textContent = 'П'+GEN;
-  hi.appendChild(mini); hi.appendChild(sp);
+function pick(dna, svgStr){
+  // История
+  const hi=document.createElement('div');hi.className='hi';
+  const sp=document.createElement('p');sp.textContent='П'+GEN;
+  hi.innerHTML=svgStr;hi.appendChild(sp);
   document.getElementById('hrow').appendChild(hi);
 
-  if (GEN >= MAX_GEN) {
-    // ФИНАЛ
-    document.getElementById('grid').style.display = 'none';
-    document.getElementById('tip').style.display = 'none';
-    document.getElementById('diffbar').style.display = 'none';
-    const winCV = document.getElementById('winCanvas');
-    renderDNA(winCV, dna);
-    document.getElementById('winbox').style.display = 'block';
+  if(GEN>=MAX_GEN){
+    document.getElementById('grid').style.display='none';
+    document.getElementById('tip').style.display='none';
+    document.getElementById('winsvg').innerHTML=svgStr;
+    document.getElementById('winbox').style.display='block';
     return;
   }
-
   GEN++;
-  PARENT = dna;
-  document.getElementById('status').textContent = `Поколение ${GEN} из ${MAX_GEN}`;
-  document.getElementById('tip').textContent = `👆 Поколение ${GEN}: выбери лучшего — каждый вариант гарантированно другой`;
+  document.getElementById('status').textContent=`Поколение ${GEN} из ${MAX_GEN}`;
+  document.getElementById('tip').textContent=`👆 Поколение ${GEN} из ${MAX_GEN} — выбери лучшего`;
   updBar();
-  // Генерируем новые варианты КАЖДЫЙ РАЗ с новыми сидами (время + счётчик)
-  const t = Date.now();
-  showGrid([mutate(dna, t % 98765 + GEN*137), mutate(dna, (t+54321) % 98765 + GEN*313)]);
+  const t=Date.now();
+  const v1=mutate(dna, t%98761+GEN*137);
+  const v2=mutate(dna, (t+54321)%98761+GEN*317);
+  showGrid([v1,v2]);
 }
 
-function restart() {
-  GEN = 1; PARENT = null;
-  document.getElementById('grid').style.display = 'grid';
-  document.getElementById('tip').style.display = 'block';
-  document.getElementById('diffbar').style.display = 'block';
-  document.getElementById('winbox').style.display = 'none';
-  document.getElementById('hrow').innerHTML = '';
-  document.getElementById('status').textContent = 'Поколение 1 из 30';
-  document.getElementById('tip').textContent = '👆 Нажми на понравившегося — он станет родителем следующего поколения';
-  updBar();
-  const t = Date.now();
-  showGrid([makeSeedDNA(t % 99991), makeSeedDNA((t+7777) % 99991)]);
+function showGrid(variants){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  variants.forEach((dna,i)=>{
+    const svg=makeSVG(dna,GEN);
+    const card=document.createElement('div');card.className='card';
+    card.innerHTML=svg;
+    const lbl=document.createElement('div');lbl.className='clabel';
+    lbl.textContent=`ВАРИАНТ ${i+1} — НАЖМИ`;
+    card.appendChild(lbl);
+    card.addEventListener('click',()=>pick(dna,svg));
+    grid.appendChild(card);
+  });
 }
 
-// СТАРТ
+function restart(){
+  GEN=1;
+  document.getElementById('grid').style.display='grid';
+  document.getElementById('tip').style.display='block';
+  document.getElementById('winbox').style.display='none';
+  document.getElementById('hrow').innerHTML='';
+  document.getElementById('status').textContent='Поколение 1 из 30';
+  document.getElementById('tip').textContent='👆 Нажми на понравившегося богатыря';
+  updBar();
+  start();
+}
+
+function start(){
+  const t=Date.now();
+  showGrid([mkDNA(t%99991), mkDNA((t+7777)%99991)]);
+}
+
 updBar();
-const t0 = Date.now();
-showGrid([makeSeedDNA(t0 % 99991), makeSeedDNA((t0+7777) % 99991)]);
+start();
 </script>
 </body></html>
