@@ -9,7 +9,7 @@ body{background:#08080f;font-family:monospace;color:#f0f0f0;padding:6px;max-widt
 h1{color:#f8d840;font-size:13px;text-align:center;padding:7px;border-bottom:2px solid #f8d840;letter-spacing:1px}
 #status{color:#f8a030;font-size:11px;text-align:center;padding:5px}
 #genbar{display:flex;gap:3px;justify-content:center;padding:4px 0}
-.gb{flex:1;max-width:36px;height:8px;background:#1a1a30;border-radius:2px}
+.gb{flex:1;max-width:18px;height:8px;background:#1a1a30;border-radius:1px}
 .gb.done{background:#f8d840}
 .gb.cur{background:#f8a030;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -32,8 +32,8 @@ h1{color:#f8d840;font-size:13px;text-align:center;padding:7px;border-bottom:2px 
 .rbtn{background:#f8d840;color:#000;border:none;padding:8px 18px;font:bold 12px monospace;cursor:pointer;border-radius:3px;width:100%}
 </style></head><body>
 
-<h1>⚔ ЭВОЛЮЦИЯ 16-БИТ БОГАТЫРЯ ⚔</h1>
-<div id="status">Поколение 1 из 10</div>
+<h1>⚔ ЭВОЛЮЦИЯ БОГАТЫРЯ — 30 ПОКОЛЕНИЙ ⚔</h1>
+<div id="status">Поколение 1 из 30</div>
 <div id="genbar"></div>
 <div id="tip">👆 Нажми на понравившегося богатыря — он станет родителем следующего поколения</div>
 <div id="grid"></div>
@@ -42,9 +42,9 @@ h1{color:#f8d840;font-size:13px;text-align:center;padding:7px;border-bottom:2px 
   <div id="hrow"></div>
 </div>
 <div id="winbox">
-  <h2>🏆 ФИНАЛЬНЫЙ БОГАТЫРЬ!</h2>
+  <h2>🏆 ФИНАЛЬНЫЙ БОГАТЫРЬ! (поколение 30)</h2>
   <canvas id="winCanvas"></canvas>
-  <p>10 поколений отбора завершены.<br>Этот богатырь — результат твоего вкуса!</p>
+  <p>30 поколений отбора завершены.<br>Этот богатырь прошёл максимальную эволюцию!</p>
   <button class="rbtn" onclick="restart()">🔄 Начать заново</button>
 </div>
 
@@ -73,13 +73,43 @@ function lcg(seed){
 }
 function randDNA(seed){const r=lcg(seed);return Array.from({length:8},()=>r());}
 
-function mutate(dna,str=0.22){
+function mutate(dna){
+  // Каждый ген ОБЯЗАН измениться минимум на 70% диапазона
+  // Максимум 30% сходства с родителем
   const d=[...dna];
-  const n=2+Math.floor(Math.random()*3);
-  const idx=new Set();
-  while(idx.size<n)idx.add(Math.floor(Math.random()*8));
-  idx.forEach(i=>d[i]=Math.min(1,Math.max(0,d[i]+(Math.random()-.5)*str*2)));
+  for(let i=0;i<8;i++){
+    const parent_val=dna[i];
+    // Минимальное изменение: 0.7 от диапазона [0,1]
+    const min_delta=0.70;
+    // Выбираем направление случайно
+    // Доступные зоны: [0, parent-min_delta] и [parent+min_delta, 1]
+    const lo_max=parent_val-min_delta;
+    const hi_min=parent_val+min_delta;
+    const has_lo=lo_max>=0;
+    const has_hi=hi_min<=1;
+    let new_val;
+    if(has_lo&&has_hi){
+      // Оба варианта доступны — выбираем случайно
+      if(Math.random()<.5) new_val=Math.random()*lo_max;
+      else new_val=hi_min+Math.random()*(1-hi_min);
+    } else if(has_lo){
+      new_val=Math.random()*lo_max;
+    } else if(has_hi){
+      new_val=hi_min+Math.random()*(1-hi_min);
+    } else {
+      // Невозможно соблюсти 70% — просто инвертируем
+      new_val=1-parent_val;
+    }
+    d[i]=Math.min(1,Math.max(0,new_val));
+  }
   return d;
+}
+
+// Проверка сходства (для отладки)
+function similarity(a,b){
+  let diff=0;
+  for(let i=0;i<8;i++)diff+=Math.abs(a[i]-b[i]);
+  return 1-(diff/8); // 0=полностью разные, 1=одинаковые
 }
 
 // ══════════════════════════════════════════════
@@ -599,7 +629,7 @@ function renderDNA(cv,dna){
   ctx.textBaseline='top';
   const posLabel=pose<.35?'рысь':pose<.7?'галоп':'дыбы';
   const skyLabel=mood<.25?'рассвет':mood<.5?'день':mood<.75?'закат':'ночь';
-  ctx.fillText(`Пок.${GEN} | тело:${(build*100)|0}% броня:${(armorT*100)|0}% ${posLabel} ${skyLabel} фон:${(bgd*100)|0}%`,4,CH-14);
+  ctx.fillText(`П${GEN}/30 | тело:${(build*100)|0}% броня:${(armorT*100)|0}% ${posLabel} ${skyLabel} фон:${(bgd*100)|0}%`,4,CH-14);
 }
 
 // ══════════════════════════════════════════════
@@ -607,13 +637,13 @@ function renderDNA(cv,dna){
 // ══════════════════════════════════════════════
 // Генбар
 const genbar=document.getElementById('genbar');
-for(let i=0;i<10;i++){
+for(let i=0;i<30;i++){
   const d=document.createElement('div');
   d.className='gb';d.id='g'+i;
   genbar.appendChild(d);
 }
 function updBar(){
-  for(let i=0;i<10;i++){
+  for(let i=0;i<30;i++){
     const el=document.getElementById('g'+i);
     el.className='gb'+(i<GEN-1?' done':i===GEN-1?' cur':'');
   }
@@ -621,10 +651,11 @@ function updBar(){
 
 function makeVariants(baseDNA){
   if(!baseDNA){
-    return [1337,2077,42,999].map(s=>randDNA(s));
+    // Первое поколение — 2 случайных с разными сидами
+    return [1337,9999].map(s=>randDNA(s));
   }
-  const strengths=[0.12,0.22,0.34,0.45];
-  return strengths.map(str=>mutate(baseDNA,str));
+  // 2 независимых мутанта с min 70% отличий
+  return [mutate(baseDNA), mutate(baseDNA)];
 }
 
 function showGrid(variants){
@@ -657,7 +688,7 @@ function pick(dna,cv){
   hi.appendChild(miniCV);hi.appendChild(sp);
   document.getElementById('hrow').appendChild(hi);
 
-  if(GEN>=10){
+  if(GEN>=30){
     // ФИНАЛ
     document.getElementById('grid').style.display='none';
     document.getElementById('tip').style.display='none';
@@ -669,8 +700,8 @@ function pick(dna,cv){
 
   GEN++;
   PARENT_DNA=dna;
-  document.getElementById('status').textContent=`Поколение ${GEN} из 10`;
-  document.getElementById('tip').textContent=`👆 Поколение ${GEN}: выбери лучшего богатыря`;
+  document.getElementById('status').textContent=`Поколение ${GEN} из 30`;
+  document.getElementById('tip').textContent=`👆 Поколение ${GEN} из 30 — выбери лучшего`;
   updBar();
   showGrid(makeVariants(dna));
 }
@@ -682,7 +713,7 @@ function restart(){
   document.getElementById('tip').textContent='👆 Нажми на понравившегося богатыря — он эволюционирует дальше';
   document.getElementById('winbox').style.display='none';
   document.getElementById('hrow').innerHTML='';
-  document.getElementById('status').textContent='Поколение 1 из 10';
+  document.getElementById('status').textContent='Поколение 1 из 30';
   updBar();
   showGrid(makeVariants(null));
 }
